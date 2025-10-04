@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)file:///C:/Users/alexa/Downloads/ora-simulator.html -->
+<html lang="fr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ORA – Point de vue émetteur</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --card: #0b1220;
+      --grid: #334155;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    body {
+      background: radial-gradient(1200px 800px at 70% -10%, #1f2937 0%, #0f172a 55%);
+      color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      display: grid; grid-template-rows: auto 1fr; gap: 12px; padding: 20px; height: 100vh; box-sizing: border-box;
+    }
+    h1 { margin: 0 0 2px 0; font-size: clamp(18px, 2.2vw, 24px); letter-spacing: .2px; }
+    .subtitle { color: var(--muted); font-size: 13px; }
+
+    .layout { display: grid; grid-template-columns: 380px 1fr; gap: 16px; height: 100%; overflow: hidden; }
+
+    .card { background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); border: 1px solid rgba(255,255,255,.06);
+      border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+
+    .panel { padding: 14px; height: 100%; box-sizing: border-box; overflow-y: auto; }
+    .panel h2 { margin: 0 0 10px 0; font-size: 14px; letter-spacing:.2px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+    .grid .full { grid-column: 1 / -1; }
+
+    label { font-size: 11px; color: var(--muted); display:block; margin-bottom: 4px; }
+    input, select { width: 100%; box-sizing: border-box; padding: 8px 10px; background: #0b1220; color: var(--text);
+      border: 1px solid rgba(255,255,255,.08); border-radius: 8px; outline: none; font-size: 13px; }
+    input:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,.15); }
+    input:disabled { background: #1f2937; color: var(--muted); cursor: not-allowed; }
+
+    .help { font-size: 10px; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+    .section { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.08); }
+
+    .chartCard { display: grid; grid-template-rows: 1fr auto auto; height: 100%; gap: 12px; }
+    .chart { padding: 8px 12px 0; overflow: hidden; }
+
+    .decision { background: linear-gradient(135deg, rgba(245,158,11,.1), rgba(245,158,11,.05)); 
+                border: 1px solid rgba(245,158,11,.2); border-radius: 10px; padding: 10px 12px; margin: 0 12px; }
+    .decision strong { font-size: 13px; }
+    .decision-content { font-size: 12px; margin-top: 4px; }
+
+    .opportunity { background: linear-gradient(135deg, rgba(96,165,250,.1), rgba(96,165,250,.05)); 
+                   border: 1px solid rgba(96,165,250,.2); border-radius: 10px; padding: 10px 12px; margin: 0; }
+
+    .results { padding: 8px 12px 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .pill { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border-radius: 10px; 
+            background: #0b1220; border: 1px solid rgba(255,255,255,.08); }
+    .pill .muted { color: var(--muted); font-size: 11px; }
+    .pill b { font-size: 15px; letter-spacing: .2px; }
+
+    svg { width: 100%; height: 100%; display: block; }
+    .axis { stroke: #e5e7eb; stroke-width: 1.2; }
+    .gridline { stroke: var(--grid); stroke-dasharray: 4 6; opacity: .55; }
+    .bar-pos { fill: var(--accent); }
+    .bar-neg { fill: var(--danger); }
+    .bar-ora { fill: var(--warning); }
+    .label { font-size: 15px; fill: #e5e7eb; font-weight: 700; }
+    .label-muted { fill: var(--muted); font-size: 14px; font-weight: 700; }
+    .step { font-size: 18px; fill: #f8fafc; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ORA — Point de vue émetteur</h1>
+    <div class="subtitle">Simulation des flux de l'entreprise émettrice avec remboursement obligatoire en actions</div>
+  </header>
+
+  <section class="layout">
+    <!-- Parameters -->
+    <div class="card panel">
+      <h2>Paramètres de l'ORA</h2>
+      <div class="grid">
+        <div>
+          <label>Nominal (€)</label>
+          <input type="number" id="nominal" value="10000" min="100" step="100">
+        </div>
+        <div>
+          <label>Coupon (% nominal)</label>
+          <input type="number" id="coupon" value="5" min="0" step="0.1">
+          <div class="help">Taux plus élevé (moins de flexibilité)</div>
+        </div>
+        <div>
+          <label>Maturité (années)</label>
+          <input type="number" id="years" value="5" min="1" step="1">
+        </div>
+        <div>
+          <label>Prix émission (% nominal)</label>
+          <input type="number" id="issuePct" value="100" min="50" max="120" step="0.1">
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Remboursement en actions</h2>
+        <div class="grid">
+          <div>
+            <label>Ratio de remboursement</label>
+            <input type="number" id="conversionRatio" value="100" min="1" step="1">
+            <div class="help">Nb actions pour 1 obligation</div>
+          </div>
+          <div>
+            <label>Prix de remboursement (€)</label>
+            <input type="number" id="conversionPrice" disabled="">
+            <div class="help">Prix émission ÷ ratio</div>
+          </div>
+          <div>
+            <label>Cours à l'échéance (€)</label>
+            <input type="number" id="finalPrice" value="120" min="1" step="1">
+          </div>
+          <div>
+            <label>Taux d'impôt (IS %)</label>
+            <input type="number" id="tax" value="25" min="0" max="50" step="0.5">
+          </div>
+          <div class="full">
+            <label>Nb actions au capital</label>
+            <input type="number" id="existingShares" value="10000" min="1" step="100">
+            <div class="help">Pour calcul de dilution</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart + decision + results -->
+    <div class="card chartCard">
+      <div class="chart">
+        <svg id="svg" viewBox="0 0 1000 380" aria-label="timeline des flux émetteur ORA"><line x1="90" x2="910" y1="200" y2="200" class="axis"></line><line x1="90" x2="90" y1="67" y2="333" class="gridline"></line><text x="90" y="372" text-anchor="middle" class="label-muted">t0</text><line x1="254" x2="254" y1="67" y2="333" class="gridline"></line><text x="254" y="372" text-anchor="middle" class="label-muted">t1</text><line x1="418" x2="418" y1="67" y2="333" class="gridline"></line><text x="418" y="372" text-anchor="middle" class="label-muted">t2</text><line x1="582" x2="582" y1="67" y2="333" class="gridline"></line><text x="582" y="372" text-anchor="middle" class="label-muted">t3</text><line x1="746" x2="746" y1="67" y2="333" class="gridline"></line><text x="746" y="372" text-anchor="middle" class="label-muted">t4</text><line x1="910" x2="910" y1="67" y2="333" class="gridline"></line><text x="910" y="372" text-anchor="middle" class="label-muted">t5</text><rect x="80" width="20" y="78.26086956521738" height="121.73913043478262" class="bar-pos"></rect><text x="90" y="68.26086956521738" text-anchor="middle" class="label">+10 000 €</text><rect x="244" width="20" y="200" height="4.565217391304344" class="bar-neg"></rect><text x="254" y="226.56521739130434" text-anchor="middle" class="label">-375 €</text><rect x="408" width="20" y="200" height="4.565217391304344" class="bar-neg"></rect><text x="418" y="226.56521739130434" text-anchor="middle" class="label">-375 €</text><rect x="572" width="20" y="200" height="4.565217391304344" class="bar-neg"></rect><text x="582" y="226.56521739130434" text-anchor="middle" class="label">-375 €</text><rect x="736" width="20" y="200" height="4.565217391304344" class="bar-neg"></rect><text x="746" y="226.56521739130434" text-anchor="middle" class="label">-375 €</text><rect x="900" width="20" y="200" height="4.565217391304344" class="bar-ora"></rect><text x="910" y="226.56521739130434" text-anchor="middle" class="label">-375 €</text><text x="90" y="40" text-anchor="middle" class="step">Émission</text><text x="500" y="40" text-anchor="middle" class="step">Coupons</text><text x="910" y="40" text-anchor="middle" class="step">Remboursement actions</text></svg>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 12px;">
+        <div class="decision">
+          <div><strong>Mécanisme ORA :</strong> Remboursement obligatoire en actions</div>
+          <div id="decisionDetails" class="decision-content">
+        À l'échéance, émission automatique de <strong>100 actions</strong> 
+        valorisées à <strong>12 000&nbsp;€</strong> au cours actuel (120€). 
+        Prix de remboursement fixé à 100.00€/action.
+      </div>
+        </div>
+        
+        <div class="opportunity">
+          <div><strong>Coût d'opportunité :</strong></div>
+          <div id="opportunityDetails" class="decision-content">
+          L'entreprise émet 100 actions valorisées à <strong>12 000&nbsp;€</strong> au cours actuel (120€).
+          Le manque à gagner vs prix de remboursement (100.00€) est de <strong>2 000&nbsp;€</strong>.
+        </div>
+        </div>
+      </div>
+
+      <div class="results">
+        <div class="pill">
+          <span class="muted">Coût du capital</span>
+          <b id="costCapital">7.21 %</b>
+        </div>
+        <div class="pill">
+          <span class="muted">Encaissement net t0</span>
+          <b id="net0">10 000&nbsp;€</b>
+        </div>
+        <div class="pill">
+          <span class="muted">Dilution</span>
+          <b id="dilution">0.99% (100 actions)</b>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const fmt = n => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(n);
+    const $ = sel => document.querySelector(sel);
+    const els = { 
+      nominal: $('#nominal'), coupon: $('#coupon'), years: $('#years'), issuePct: $('#issuePct'),
+      conversionRatio: $('#conversionRatio'), conversionPrice: $('#conversionPrice'), finalPrice: $('#finalPrice'), 
+      tax: $('#tax'), existingShares: $('#existingShares'), svg: $('#svg'), costCapital: $('#costCapital'), 
+      net0: $('#net0'), dilution: $('#dilution'), decisionDetails: $('#decisionDetails'),
+      opportunityDetails: $('#opportunityDetails')
+    };
+
+    for (const id in els) { 
+      if(['svg','costCapital','net0','dilution','decisionDetails','conversionPrice','opportunityDetails'].includes(id)) continue; 
+      const el = els[id]; 
+      if (el && el.tagName) el.addEventListener('input', render); 
+    }
+
+    function params() {
+      const nominal = +els.nominal.value;
+      const couponRate = (+els.coupon.value)/100;
+      const years = Math.max(1, Math.round(+els.years.value));
+      const price = nominal * (+els.issuePct.value)/100;
+      const conversionRatio = +els.conversionRatio.value;
+      const conversionPrice = price / conversionRatio;
+      const finalPrice = +els.finalPrice.value;
+      const tax = (+els.tax.value)/100;
+      const existingShares = +els.existingShares.value;
+      return { nominal, couponRate, years, price, conversionRatio, conversionPrice, finalPrice, tax, existingShares };
+    }
+
+    function cashflows(p) {
+      const { nominal, couponRate, years, price, tax } = p;
+      
+      const coupon = nominal * couponRate;
+      const flows = [];
+      
+      // t0: encaissement de l'émission
+      flows[0] = price;
+      
+      // t1 à t(n-1): paiement des coupons
+      for (let t = 1; t < years; t++) {
+        flows[t] = -coupon * (1 - tax);
+      }
+      
+      // tn: dernier coupon seulement (pas de remboursement cash, uniquement des actions)
+      flows[years] = -coupon * (1 - tax);
+      
+      return flows;
+    }
+
+    function calculateCostOfCapital(p, flows) {
+      const { conversionRatio, finalPrice } = p;
+      
+      // Pour l'ORA, on doit toujours tenir compte de la valeur des actions émises
+      const equityValueGiven = conversionRatio * finalPrice;
+      
+      const adjustedFlows = [...flows];
+      adjustedFlows[adjustedFlows.length - 1] -= equityValueGiven;
+      
+      let lo = -0.99, hi = 2.0, mid = 0;
+      for (let iter = 0; iter < 120; iter++) {
+        mid = (lo + hi) / 2;
+        const npv = adjustedFlows.reduce((acc, cf, t) => acc + cf / Math.pow(1 + mid, t), 0);
+        const npvLo = adjustedFlows.reduce((acc, cf, t) => acc + cf / Math.pow(1 + lo, t), 0);
+        if (Math.abs(npv) < 1e-8) break;
+        if (Math.sign(npv) === Math.sign(npvLo)) lo = mid; else hi = mid;
+      }
+      return mid;
+    }
+
+    function updateDecisionBox(p) {
+      const { conversionRatio, finalPrice, conversionPrice } = p;
+      const stockValue = conversionRatio * finalPrice;
+      
+      els.decisionDetails.innerHTML = `
+        À l'échéance, émission automatique de <strong>${conversionRatio} actions</strong> 
+        valorisées à <strong>${fmt(stockValue)}</strong> au cours actuel (${finalPrice}€). 
+        Prix de remboursement fixé à ${conversionPrice.toFixed(2)}€/action.
+      `;
+    }
+
+    function updateOpportunityBox(p) {
+      const { conversionRatio, finalPrice, conversionPrice } = p;
+      
+      const equityValueGiven = conversionRatio * finalPrice;
+      const theoreticalValue = conversionRatio * conversionPrice;
+      const opportunityCost = equityValueGiven - theoreticalValue;
+      
+      if (opportunityCost > 0) {
+        els.opportunityDetails.innerHTML = `
+          L'entreprise émet ${conversionRatio} actions valorisées à <strong>${fmt(equityValueGiven)}</strong> au cours actuel (${finalPrice}€).
+          Le manque à gagner vs prix de remboursement (${conversionPrice.toFixed(2)}€) est de <strong>${fmt(opportunityCost)}</strong>.
+        `;
+      } else {
+        els.opportunityDetails.innerHTML = `
+          Le cours actuel (${finalPrice}€) est inférieur ou égal au prix de remboursement (${conversionPrice.toFixed(2)}€).
+          Aucun manque à gagner : l'entreprise émet ${conversionRatio} actions pour <strong>${fmt(equityValueGiven)}</strong>.
+        `;
+      }
+    }
+
+    function renderChart(flows, p) {
+      const { years } = p;
+      const svg = els.svg; 
+      svg.innerHTML = '';
+      
+      const W = 1000, H = 380;
+      const PAD = {l:90, r:90, t:60, b:40};
+
+      const minV = Math.min(...flows, 0), maxV = Math.max(...flows, 0);
+      const absMax = Math.max(Math.abs(minV), Math.abs(maxV)) * 1.15 || 1;
+      const yPx = v => H - PAD.b - ((v + absMax) / (2*absMax)) * (H - PAD.t - PAD.b);
+      const xPx = t => PAD.l + ( (W - PAD.l - PAD.r) * (t/years) );
+
+      const axis = document.createElementNS('http://www.w3.org/2000/svg','line');
+      axis.setAttribute('x1', PAD.l); axis.setAttribute('x2', W - PAD.r);
+      axis.setAttribute('y1', yPx(0)); axis.setAttribute('y2', yPx(0)); 
+      axis.setAttribute('class','axis'); svg.appendChild(axis);
+
+      for (let t = 0; t <= years; t++) {
+        const gxPx = xPx(t);
+        const gl = document.createElementNS('http://www.w3.org/2000/svg','line');
+        gl.setAttribute('x1', gxPx); gl.setAttribute('x2', gxPx);
+        gl.setAttribute('y1', yPx(absMax*0.95)); gl.setAttribute('y2', yPx(-absMax*0.95));
+        gl.setAttribute('class','gridline'); svg.appendChild(gl);
+
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+        lbl.setAttribute('x', gxPx); lbl.setAttribute('y', H - 8);
+        lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('class','label-muted');
+        lbl.textContent = `t${t}`; svg.appendChild(lbl);
+      }
+
+      for (let t = 0; t <= years; t++) {
+        const v = flows[t] || 0;
+        const bw = 20;
+        const x0Px = xPx(t) - bw/2;
+        const y0Px = yPx(0);
+        const y1Px = yPx(v);
+        
+        const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        rect.setAttribute('x', x0Px); rect.setAttribute('width', bw);
+        rect.setAttribute('y', Math.min(y0Px, y1Px)); rect.setAttribute('height', Math.abs(y1Px - y0Px));
+        
+        // Toujours en orange pour l'ORA à l'échéance (remboursement en actions)
+        if (t === years) {
+          rect.setAttribute('class', 'bar-ora');
+        } else {
+          rect.setAttribute('class', v >= 0 ? 'bar-pos' : 'bar-neg');
+        }
+        svg.appendChild(rect);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+        txt.setAttribute('x', xPx(t));
+        const labelY = v >= 0 ? y1Px - 10 : y1Px + 22;
+        txt.setAttribute('y', labelY);
+        txt.setAttribute('text-anchor','middle'); txt.setAttribute('class','label');
+        const nf = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
+        txt.textContent = (v>=0?'+':'') + nf.format(Math.round(v)) + ' €';
+        svg.appendChild(txt);
+      }
+
+      const stepY = PAD.t - 20;
+      const steps = [
+        { x: xPx(0), text: 'Émission' },
+        { x: xPx(years/2), text: 'Coupons' },
+        { x: xPx(years), text: 'Remboursement actions' }
+      ];
+      
+      steps.forEach(s => {
+        const tEl = document.createElementNS('http://www.w3.org/2000/svg','text');
+        tEl.setAttribute('x', s.x); tEl.setAttribute('y', stepY);
+        tEl.setAttribute('text-anchor','middle'); tEl.setAttribute('class','step');
+        tEl.textContent = s.text; svg.appendChild(tEl);
+      });
+    }
+
+    function render() {
+      const p = params();
+      
+      els.conversionPrice.value = p.conversionPrice.toFixed(2);
+      
+      const flows = cashflows(p);
+      
+      renderChart(flows, p);
+      updateDecisionBox(p);
+      updateOpportunityBox(p);
+      
+      const costCapital = calculateCostOfCapital(p, flows);
+      
+      // La dilution est toujours présente pour une ORA
+      const newShares = p.conversionRatio;
+      const totalShares = p.existingShares + newShares;
+      const dilutionPct = (newShares / totalShares * 100).toFixed(2);
+      const dilutionText = `${dilutionPct}% (${newShares.toLocaleString('fr-FR')} actions)`;
+      
+      els.costCapital.textContent = (costCapital * 100).toFixed(2) + ' %';
+      els.net0.textContent = fmt(flows[0]);
+      els.dilution.textContent = dilutionText;
+    }
+
+    render();
+    window.addEventListener('resize', render);
+  </script>
+
+</body></html>

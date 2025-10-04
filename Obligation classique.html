@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<!-- saved from url=(0087)file:///C:/Users/alexa/Downloads/simulateur_obligations_emetteur_html_css_js%20(9).html -->
+<html lang="fr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Obligation – Point de vue émetteur</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --card: #0b1220;
+      --grid: #334155;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: radial-gradient(1200px 800px at 70% -10%, #1f2937 0%, #0f172a 55%);
+      color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      display: grid; grid-template-rows: auto 1fr; gap: 16px; padding: 24px; height: 100vh; box-sizing: border-box;
+    }
+    h1 { margin: 0 0 2px 0; font-size: clamp(20px, 2.6vw, 28px); letter-spacing: .2px; }
+    .subtitle { color: var(--muted); font-size: 14px; }
+
+    /* Layout ajusté : plus de place aux paramètres */
+    .layout { display: grid; grid-template-columns: 420px 1fr; gap: 18px; align-items: stretch; height: calc(100vh - 80px); }
+
+    .card { background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); border: 1px solid rgba(255,255,255,.06);
+      border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+
+    .panel { padding: 18px 16px; height: 100%; box-sizing: border-box; }
+    .panel h2 { margin: 0 0 12px 0; font-size: 16px; letter-spacing:.2px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+    .grid .full { grid-column: 1 / -1; }
+
+    label { font-size: 12px; color: var(--muted); display:block; margin-bottom: 6px; }
+    input, select { width: 100%; box-sizing: border-box; padding: 10px 12px; background: #0b1220; color: var(--text);
+      border: 1px solid rgba(255,255,255,.08); border-radius: 10px; outline: none; }
+    input:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,.15); }
+
+    .help { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.35; }
+
+    .chartCard { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
+    .chart { padding: 10px 16px 0; }
+
+    .results { padding: 8px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: center; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; background: #0b1220; border: 1px solid rgba(255,255,255,.08); }
+    .pill b { font-size: 16px; letter-spacing: .2px; }
+    .muted { color: var(--muted); font-size: 12px; }
+
+    svg { width: 100%; height: clamp(360px, 62vh, 720px); display: block; }
+    .axis { stroke: #e5e7eb; stroke-width: 1.1; }
+    .gridline { stroke: var(--grid); stroke-dasharray: 4 6; opacity: .55; }
+    .bar-pos { fill: var(--accent); }
+    .bar-neg { fill: var(--danger); }
+    .label { font-size: 12px; fill: #e5e7eb; font-weight: 700; }
+    .label-muted { fill: var(--muted); font-size: 12px; font-weight: 700; }
+    .step { font-size: 16px; fill: #f8fafc; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Obligation — point de vue de l’émetteur</h1>
+    <div class="subtitle">Graphique dynamique + coût effectif (YTM) avant et après impôt, tenant compte du prix d’émission et des frais (déductibles).</div>
+  </header>
+
+  <section class="layout">
+    <!-- Parameters -->
+    <div class="card panel">
+      <h2>Paramètres</h2>
+      <div class="grid">
+        <div>
+          <label>Nominal (€)</label>
+          <input type="number" id="nominal" value="10000" min="100" step="100">
+        </div>
+        <div>
+          <label>Coupon (% du nominal)</label>
+          <input type="number" id="coupon" value="5" min="0" step="0.1">
+        </div>
+        <div>
+          <label>Maturité (années)</label>
+          <input type="number" id="years" value="5" min="1" step="1">
+        </div>
+        <div>
+          <label>Prix d’émission (% du nominal)</label>
+          <input type="number" id="issuePct" value="100" min="50" max="120" step="0.1">
+        </div>
+        <div>
+          <label>Frais d’émission</label>
+          <select id="feeMode">
+            <option value="pct" selected="">% du nominal</option>
+            <option value="abs">Montant (€)</option>
+          </select>
+        </div>
+        <div>
+          <label id="feeLabel">Frais (% du nominal)</label>
+          <input type="number" id="fees" value="1" min="0" step="0.1">
+        </div>
+        <div>
+          <label>Taux d’impôt (IS)</label>
+          <input type="number" id="tax" value="25" min="0" max="50" step="0.5">
+        </div>
+        <div>
+          <label>Coût rapporté</label>
+          <select id="mode">
+            <option value="pre">Avant impôt (pré-tax YTM)</option>
+            <option value="post" selected="">Après impôt (coût après impôt)</option>
+          </select>
+        </div>
+        <div class="full help">Hypothèses : (1) <b>frais</b> payés à t0 et <b>déductibles immédiatement</b> ; (2) bouclier annuel sur <b>intérêts</b> ; (3) principal non déductible.</div>
+      </div>
+    </div>
+
+    <!-- Chart + results -->
+    <div class="card chartCard">
+      <div class="chart">
+        <svg id="svg" viewBox="0 0 1000 420" aria-label="timeline des flux"><line x1="122.11668928086839" x2="877.8833107191316" y1="215.83333333333331" y2="215.83333333333331" class="axis"></line><line x1="122.11668928086839" x2="122.11668928086839" y1="88.375" y2="343.2916666666667" class="gridline"></line><text x="122.11668928086839" y="399" text-anchor="middle" class="label-muted">0</text><line x1="273.27001356852105" x2="273.27001356852105" y1="88.375" y2="343.2916666666667" class="gridline"></line><text x="273.27001356852105" y="399" text-anchor="middle" class="label-muted">1</text><line x1="424.4233378561737" x2="424.4233378561737" y1="88.375" y2="343.2916666666667" class="gridline"></line><text x="424.4233378561737" y="399" text-anchor="middle" class="label-muted">2</text><line x1="575.5766621438263" x2="575.5766621438263" y1="88.375" y2="343.2916666666667" class="gridline"></line><text x="575.5766621438263" y="399" text-anchor="middle" class="label-muted">3</text><line x1="726.729986431479" x2="726.729986431479" y1="88.375" y2="343.2916666666667" class="gridline"></line><text x="726.729986431479" y="399" text-anchor="middle" class="label-muted">4</text><line x1="877.8833107191316" x2="877.8833107191316" y1="88.375" y2="343.2916666666667" class="gridline"></line><text x="877.8833107191316" y="399" text-anchor="middle" class="label-muted">5</text><rect x="109.90502035278155" width="24.423337856173678" y="104.22690763052204" height="111.60642570281131" class="bar-pos"></rect><text x="122.11668928086839" y="239.16666666666666" text-anchor="middle" class="label">+9 925 €</text><rect x="261.0583446404342" width="24.423337856173678" y="215.83333333333331" height="4.216867469879512" class="bar-neg"></rect><text x="273.27001356852105" y="243.3835341365462" text-anchor="middle" class="label">-375 €</text><rect x="412.21166892808685" width="24.423337856173678" y="215.83333333333331" height="4.216867469879512" class="bar-neg"></rect><text x="424.4233378561737" y="243.3835341365462" text-anchor="middle" class="label">-375 €</text><rect x="563.3649932157396" width="24.423337856173678" y="215.83333333333331" height="4.216867469879512" class="bar-neg"></rect><text x="575.5766621438263" y="243.3835341365462" text-anchor="middle" class="label">-375 €</text><rect x="714.5183175033922" width="24.423337856173678" y="215.83333333333331" height="4.216867469879512" class="bar-neg"></rect><text x="726.729986431479" y="243.3835341365462" text-anchor="middle" class="label">-375 €</text><rect x="865.6716417910447" width="24.423337856173678" y="215.83333333333331" height="116.66666666666667" class="bar-neg"></rect><text x="877.8833107191316" y="355.8333333333333" text-anchor="middle" class="label">-10 375 €</text><text x="122.11668928086839" y="49" text-anchor="middle" class="step">Étape 1 : Émission</text><text x="500" y="49" text-anchor="middle" class="step">Étape 2 : Versement des intérêts</text><text x="877.8833107191316" y="49" text-anchor="middle" class="step">Étape 3 : Échéance</text></svg>
+      </div>
+      <div class="results">
+        <div class="pill"><span class="muted">Coût / YTM</span><b id="ytm">3.92 %</b></div>
+        <div class="pill"><span class="muted">Produit net à t0</span><b id="net0">9 925&nbsp;€</b></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const fmt = n => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(n);
+    const $ = sel => document.querySelector(sel);
+    const els = { nominal: $('#nominal'), coupon: $('#coupon'), years: $('#years'), issuePct: $('#issuePct'),
+      feeMode: $('#feeMode'), fees: $('#fees'), feeLabel: $('#feeLabel'), tax: $('#tax'), mode: $('#mode'),
+      svg: $('#svg'), ytm: $('#ytm'), net0: $('#net0') };
+
+    els.feeMode.addEventListener('change', () => {
+      if (els.feeMode.value === 'pct') { els.feeLabel.textContent = 'Frais (% du nominal)'; els.fees.step = 0.1; els.fees.value = 1; }
+      else { els.feeLabel.textContent = 'Frais (montant en €)'; els.fees.step = 100; els.fees.value = 100; }
+      render();
+    });
+    for (const id in els) { if(['svg','ytm','net0','feeLabel'].includes(id)) continue; const el = els[id]; if (el && el.tagName) el.addEventListener('input', render); }
+
+    function params() {
+      const nominal = +els.nominal.value;
+      const couponRate = (+els.coupon.value)/100;
+      const years = Math.max(1, Math.round(+els.years.value));
+      const price = nominal * (+els.issuePct.value)/100;
+      const fees = els.feeMode.value === 'pct' ? nominal * (+els.fees.value)/100 : +els.fees.value;
+      const tax = (+els.tax.value)/100;
+      const mode = els.mode.value;
+      return { nominal, couponRate, years, price, fees, tax, mode };
+    }
+
+    function cashflows({ nominal, couponRate, years, price, fees, tax, mode }) {
+      const coupon = nominal * couponRate;
+      const pre = [];
+      pre[0] = price - fees;
+      for (let t=1; t<years; t++) pre[t] = -coupon;
+      pre[years] = -(coupon + nominal);
+      if (mode === 'pre') return pre;
+      const post = [...pre];
+      post[0] = price - fees + (tax * fees);
+      for (let t=1; t<years; t++) post[t] = -coupon * (1 - tax);
+      post[years] = -( nominal + coupon * (1 - tax) );
+      return post;
+    }
+
+    function irr(flows) {
+      let lo = -0.99, hi = 2.0, mid = 0;
+      for (let iter=0; iter<120; iter++) {
+        mid = (lo + hi) / 2;
+        const npv = flows.reduce((acc, cf, t) => acc + cf / Math.pow(1+mid, t), 0);
+        const npvLo = flows.reduce((acc, cf, t) => acc + cf / Math.pow(1+lo, t), 0);
+        if (Math.abs(npv) < 1e-8) break;
+        if (Math.sign(npv) === Math.sign(npvLo)) lo = mid; else hi = mid;
+      }
+      return mid;
+    }
+
+    function renderChart(flows, {years}) {
+      const svg = els.svg; svg.innerHTML = '';
+      const W = svg.clientWidth || 1000;
+      const H = svg.clientHeight || 420;
+      const PAD = {l:90, r:90, t:70, b:60}; // augmenté à gauche et à droite
+
+      const minV = Math.min(...flows, 0), maxV = Math.max(...flows, 0);
+      const absMax = Math.max(Math.abs(minV), Math.abs(maxV)) * 1.15 || 1;
+      const yPx = v => H - PAD.b - ((v + absMax) / (2*absMax)) * (H - PAD.t - PAD.b);
+      const xPx = t => PAD.l + ( (W - PAD.l - PAD.r) * (t/years) );
+      const toVBX = px => (px / W) * 1000;
+      const toVBY = px => (px / H) * 420;
+
+      const axis = document.createElementNS('http://www.w3.org/2000/svg','line');
+      axis.setAttribute('x1', toVBX(PAD.l)); axis.setAttribute('x2', toVBX(W - PAD.r));
+      axis.setAttribute('y1', toVBY(yPx(0))); axis.setAttribute('y2', toVBY(yPx(0))); axis.setAttribute('class','axis'); svg.appendChild(axis);
+
+      for (let t=0; t<=years; t++) {
+        const gxPx = xPx(t);
+        const gl = document.createElementNS('http://www.w3.org/2000/svg','line');
+        gl.setAttribute('x1', toVBX(gxPx)); gl.setAttribute('x2', toVBX(gxPx));
+        gl.setAttribute('y1', toVBY(yPx(absMax*0.95))); gl.setAttribute('y2', toVBY(yPx(-absMax*0.95)));
+        gl.setAttribute('class','gridline'); svg.appendChild(gl);
+
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+        lbl.setAttribute('x', toVBX(gxPx)); lbl.setAttribute('y', toVBY(H - 18));
+        lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('class','label-muted');
+        lbl.textContent = t; svg.appendChild(lbl);
+      }
+
+      for (let t=0; t<=years; t++) {
+        const v = flows[t] || 0;
+        const bw = 18;
+        const x0Px = xPx(t) - bw/2;
+        const y0Px = yPx(0);
+        const y1Px = yPx(v);
+        const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        rect.setAttribute('x', toVBX(x0Px)); rect.setAttribute('width', toVBX(bw));
+        rect.setAttribute('y', toVBY(Math.min(y0Px, y1Px))); rect.setAttribute('height', toVBY(Math.abs(y1Px - y0Px)));
+        rect.setAttribute('class', v>=0 ? 'bar-pos' : 'bar-neg'); svg.appendChild(rect);
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+        txt.setAttribute('x', toVBX(xPx(t)));
+        const labelY = v >= 0 ? y0Px + 20 : y1Px + 20;
+        txt.setAttribute('y', toVBY(labelY));
+        txt.setAttribute('text-anchor','middle'); txt.setAttribute('class','label');
+        const nf = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
+        txt.textContent = (v>=0?'+':'') + nf.format(Math.round(v)) + ' €';
+        svg.appendChild(txt);
+      }
+
+      const stepY = PAD.t - 28;
+      const steps = [
+        { x: xPx(0), text: 'Étape 1 : Émission' },
+        { x: xPx(years/2), text: 'Étape 2 : Versement des intérêts' },
+        { x: xPx(years), text: 'Étape 3 : Échéance' }
+      ];
+      steps.forEach(s => {
+        const tEl = document.createElementNS('http://www.w3.org/2000/svg','text');
+        tEl.setAttribute('x', toVBX(s.x)); tEl.setAttribute('y', toVBY(stepY));
+        tEl.setAttribute('text-anchor','middle'); tEl.setAttribute('class','step');
+        tEl.textContent = s.text; svg.appendChild(tEl);
+      });
+    }
+
+    function render() {
+      const p = params();
+      const flows = cashflows(p);
+      renderChart(flows, p);
+      const ytm = irr(flows);
+      els.ytm.textContent = (ytm*100).toFixed(2) + ' %';
+      els.net0.textContent = fmt(flows[0]);
+    }
+
+    render();
+    window.addEventListener('resize', render);
+  </script>
+
+
+</body></html>

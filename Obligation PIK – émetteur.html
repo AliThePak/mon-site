@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)file:///C:/Users/alexa/Downloads/pik_bond_issuer_view.html -->
+<html lang="fr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Obligation PIK – émetteur</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111827;
+            --text: #e5e7eb;
+            --muted: #94a3b8;
+            --accent: #22c55e;
+            --danger: #ef4444;
+            --grid: #334155;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            margin: 0;
+            background: radial-gradient(1200px 900px at 70% -10%, #1f2937 0%, #0f172a 55%);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 16px;
+            padding: 24px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        
+        .header-left {
+            flex: 1;
+        }
+        
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            min-width: 150px;
+        }
+        
+        .cost-label {
+            font-size: 16px;
+            color: var(--muted);
+            font-weight: bold;
+            text-decoration: underline;
+            text-align: right;
+            padding-right: 400px;
+        }
+        
+        .cost-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+            padding-right: 410px;
+        }
+        
+        .layout {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 16px;
+            height: calc(100vh - 80px);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: clamp(20px, 2.6vw, 28px);
+        }
+        
+        .subtitle {
+            color: var(--muted);
+            font-size: 13px;
+        }
+        
+        .card {
+            background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        
+        .panel {
+            padding: 16px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 12px;
+        }
+        
+        .grid .full {
+            grid-column: 1/-1;
+        }
+        
+        label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 9px 10px;
+            background: #0b1220;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 10px;
+            color: var(--text);
+        }
+        
+        .help {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        
+        .charts {
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+        }
+        
+        .title {
+            padding: 8px 16px 0;
+            color: var(--muted);
+            font-size: 18px;
+            text-decoration: underline;
+        }
+        
+        .res {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            padding: 8px 16px 14px;
+        }
+        
+        .pill {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            background: #0b1220;
+            border: 1px solid rgba(255,255,255,.08);
+            padding: 10px 12px;
+            border-radius: 999px;
+        }
+        
+        .pill span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        
+        svg {
+            width: 100%;
+            display: block;
+        }
+        
+        .bsvg {
+            height: clamp(220px, 35vh, 360px);
+        }
+        
+        .fsvg {
+            height: clamp(260px, 40vh, 420px);
+        }
+        
+        .axis {
+            stroke: #e5e7eb;
+            stroke-width: 1.1;
+        }
+        
+        .gridline {
+            stroke: var(--grid);
+            stroke-dasharray: 4 6;
+            opacity: .55;
+        }
+        
+        .pos {
+            fill: var(--accent);
+        }
+        
+        .neg {
+            fill: var(--danger);
+        }
+        
+        .lbl {
+            font-size: 18px;
+            fill: #e5e7eb;
+            font-weight: 700;
+        }
+        
+        .lbl2 {
+            font-size: 12px;
+            fill: var(--muted);
+            font-weight: 700;
+        }
+        
+        .legend {
+            font-size: 18px;
+            fill: #8aa;
+        }
+        
+        .period {
+            font-size: 13px;
+            fill: var(--muted);
+            font-weight: 600;
+        }
+        
+        .arrow {
+            fill: none;
+            stroke: #60a5fa;
+            stroke-width: 1.6;
+            marker-end: url(#ah);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1>Obligation PIK — point de vue de l'émetteur</h1>
+            <div class="subtitle">Intérêts capitalisés, frais déductibles à t0, bouclier fiscal annuel. Graphiques dynamiques + IRR avant/après impôt.</div>
+        </div>
+        <div class="header-right">
+            <div class="cost-label">Coût actuariel</div>
+            <div class="cost-value" id="headerIrr">5.40 %</div>
+        </div>
+    </header>
+    
+    <section class="layout">
+        <div class="card panel">
+            <h3>Paramètres</h3>
+            <div class="grid">
+                <div>
+                    <label>Nominal (€)</label>
+                    <input id="nominal" type="number" value="10000">
+                </div>
+                <div>
+                    <label>Taux PIK (%/an)</label>
+                    <input id="r" type="number" value="7">
+                </div>
+                <div>
+                    <label>Maturité (années)</label>
+                    <input id="n" type="number" value="5">
+                </div>
+                <div>
+                    <label>Prix d'émission (% nominal)</label>
+                    <input id="issue" type="number" value="100">
+                </div>
+                <div>
+                    <label>Frais d'émission</label>
+                    <select id="fm">
+                        <option value="pct" selected="">% nominal</option>
+                        <option value="abs">Montant (€)</option>
+                    </select>
+                </div>
+                <div>
+                    <label id="fl">Frais (% ou €)</label>
+                    <input id="f" type="number" value="1">
+                </div>
+                <div>
+                    <label>Taux d'impôt (IS)</label>
+                    <input id="t" type="number" value="25">
+                </div>
+                <div>
+                    <label>Coût rapporté</label>
+                    <select id="mode">
+                        <option value="pre">Avant impôt</option>
+                        <option value="post" selected="">Après impôt</option>
+                    </select>
+                </div>
+                <div class="full help">
+                    Hypothèses : intérêts PIK capitalisés, frais déductibles à t0, bouclier fiscal sur intérêts accrus, principal non déductible.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card charts">
+            <div class="title">Encours (nominal + intérêts capitalisés)</div>
+            <div class="chart">
+                <svg id="sb" class="bsvg" viewBox="0 0 1000 360"><rect x="42.16666666666667" width="95.66666666666666" y="143.60264392486346" height="136.39735607513654" class="pos"></rect><text x="90" y="125.60264392486346" class="lbl" text-anchor="middle">10 000&nbsp;€</text><text x="90" y="320" class="period" text-anchor="middle">T0</text><rect x="206.16666666666669" width="95.66666666666666" y="134.0548289996039" height="145.9451710003961" class="pos"></rect><text x="254" y="116.0548289996039" class="lbl" text-anchor="middle">10 700&nbsp;€</text><text x="254" y="320" class="period" text-anchor="middle">T1</text><path d="M90,143.60264392486346 Q172,94.0548289996039 254,134.0548289996039" class="arrow"></path><rect x="370.1666666666667" width="95.66666666666666" y="123.83866702957616" height="156.16133297042384" class="pos"></rect><text x="418" y="105.83866702957616" class="lbl" text-anchor="middle">11 449&nbsp;€</text><text x="418" y="320" class="period" text-anchor="middle">T2</text><path d="M254,134.0548289996039 Q336,83.83866702957616 418,123.83866702957616" class="arrow"></path><rect x="534.1666666666666" width="95.66666666666666" y="112.90737372164648" height="167.09262627835352" class="pos"></rect><text x="582" y="94.90737372164648" class="lbl" text-anchor="middle">12 250&nbsp;€</text><text x="582" y="320" class="period" text-anchor="middle">T3</text><path d="M418,123.83866702957616 Q500,72.90737372164648 582,112.90737372164648" class="arrow"></path><rect x="698.1666666666666" width="95.66666666666666" y="101.21088988216172" height="178.78911011783828" class="pos"></rect><text x="746" y="83.21088988216172" class="lbl" text-anchor="middle">13 108&nbsp;€</text><text x="746" y="320" class="period" text-anchor="middle">T4</text><path d="M582,112.90737372164648 Q664,61.21088988216172 746,101.21088988216172" class="arrow"></path><rect x="862.1666666666666" width="95.66666666666666" y="88.69565217391303" height="191.30434782608697" class="pos"></rect><text x="910" y="70.69565217391303" class="lbl" text-anchor="middle">14 026&nbsp;€</text><text x="910" y="320" class="period" text-anchor="middle">T5</text><path d="M746,101.21088988216172 Q828,48.69565217391303 910,88.69565217391303" class="arrow"></path><defs><marker id="ah" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#60a5fa"></path></marker></defs><text x="90" y="80" class="legend" text-anchor="start">Encours = N×(1+r)^t</text></svg>
+            </div>
+            <div class="title">Timeline des flux (émetteur)</div>
+            <div class="chart">
+                <svg id="sf" class="fsvg" viewBox="0 0 1000 420"><line x1="90" y1="167.5" x2="910" y2="167.5" class="axis"></line><text x="90" y="337" class="period" text-anchor="middle">T0</text><rect x="74" width="32" y="85.96770542110943" height="81.53229457889057" class="pos"></rect><text x="90" y="193.5" class="lbl" text-anchor="middle">+9 925 €</text><text x="254" y="337" class="period" text-anchor="middle">T1</text><rect x="238" width="32" y="166.06240286636717" height="1.4375971336328348" class="pos"></rect><text x="254" y="193.5" class="lbl" text-anchor="middle">+175 €</text><text x="418" y="337" class="period" text-anchor="middle">T2</text><rect x="402" width="32" y="165.96177106701288" height="1.5382289329871242" class="pos"></rect><text x="418" y="193.5" class="lbl" text-anchor="middle">+187 €</text><text x="582" y="337" class="period" text-anchor="middle">T3</text><rect x="566" width="32" y="165.85409504170377" height="1.645904958296228" class="pos"></rect><text x="582" y="193.5" class="lbl" text-anchor="middle">+200 €</text><text x="746" y="337" class="period" text-anchor="middle">T4</text><rect x="730" width="32" y="165.73888169462305" height="1.7611183053769537" class="pos"></rect><text x="746" y="193.5" class="lbl" text-anchor="middle">+214 €</text><text x="910" y="337" class="period" text-anchor="middle">T5</text><rect x="894" width="32" y="167.5" height="113.33299471759449" class="neg"></rect><text x="910" y="306.8329947175945" class="lbl" text-anchor="middle">-13 796 € (14 026 € - bouclier 229 €)</text></svg>
+            </div>
+            <div class="res">
+                <div class="pill">
+                    <span>IRR / Coût</span>
+                    <b id="irr">5.40 %</b>
+                </div>
+                <div class="pill">
+                    <span>Produit net à t0</span>
+                    <b id="net0">9 925&nbsp;€</b>
+                </div>
+                <div class="pill">
+                    <span>Montant remboursé</span>
+                    <b id="redeem">14 026&nbsp;€</b>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <script>
+        (() => {
+            const $ = q => document.querySelector(q);
+            const fmt = n => new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'EUR',
+                maximumFractionDigits: 0
+            }).format(n || 0);
+            
+            const els = {
+                N: $('#nominal'),
+                r: $('#r'),
+                n: $('#n'),
+                issue: $('#issue'),
+                fm: $('#fm'),
+                f: $('#f'),
+                fl: $('#fl'),
+                t: $('#t'),
+                mode: $('#mode'),
+                sb: $('#sb'),
+                sf: $('#sf'),
+                irr: $('#irr'),
+                headerIrr: $('#headerIrr'),
+                net0: $('#net0'),
+                redeem: $('#redeem')
+            };
+            
+            els.fm.addEventListener('change', () => {
+                els.fl.textContent = els.fm.value === 'pct' ? 'Frais (% nominal)' : 'Frais (€)';
+                render();
+            });
+            
+            ['N', 'r', 'n', 'issue', 'f', 't', 'mode'].forEach(k => 
+                els[k].addEventListener('input', render)
+            );
+            
+            function P() {
+                const N = +els.N.value || 0;
+                const r = (+els.r.value || 0) / 100;
+                const n = Math.max(1, +els.n.value || 1);
+                const price = N * (+els.issue.value || 0) / 100;
+                const fees = els.fm.value === 'pct' ? N * (+els.f.value || 0) / 100 : +els.f.value || 0;
+                const tax = (+els.t.value || 0) / 100;
+                const mode = els.mode.value;
+                return { N, r, n, price, fees, tax, mode };
+            }
+            
+            function bal({N, r, n}) {
+                return Array.from({length: n + 1}, (_, i) => N * Math.pow(1 + r, i));
+            }
+            
+            function comps(p) {
+                const B = bal(p);
+                const F = new Array(p.n + 1).fill(0);
+                const S = new Array(p.n + 1).fill(0);
+                
+                F[0] = p.price - p.fees;
+                
+                if (p.mode === 'post') {
+                    F[0] += p.tax * p.fees;
+                    for (let t = 1; t <= p.n; t++) {
+                        S[t] = p.tax * (B[t - 1] * p.r);
+                        F[t] += S[t];
+                    }
+                }
+                
+                F[p.n] += -B[p.n];
+                
+                return {
+                    B,
+                    F,
+                    S,
+                    net0: F[0],
+                    redeem: B[p.n]
+                };
+            }
+            
+            function irr(fl) {
+                let lo = -.99, hi = 3, m = 0;
+                const f = x => fl.reduce((a, c, i) => a + c / Math.pow(1 + x, i), 0);
+                let npl = f(lo);
+                
+                for (let i = 0; i < 120; i++) {
+                    m = (lo + hi) / 2;
+                    const np = f(m);
+                    if (Math.abs(np) < 1e-10) break;
+                    if (Math.sign(np) === Math.sign(npl)) {
+                        lo = m;
+                        npl = np;
+                    } else {
+                        hi = m;
+                    }
+                }
+                return m;
+            }
+            
+            function clear(svg) {
+                while (svg.firstChild) svg.removeChild(svg.firstChild);
+            }
+            
+            function line(x1, y1, x2, y2, c) {
+                const e = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                e.setAttribute('x1', x1);
+                e.setAttribute('y1', y1);
+                e.setAttribute('x2', x2);
+                e.setAttribute('y2', y2);
+                e.setAttribute('class', c);
+                return e;
+            }
+            
+            function rect(x, w, y, h, c) {
+                const e = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                e.setAttribute('x', x);
+                e.setAttribute('width', w);
+                e.setAttribute('y', y);
+                e.setAttribute('height', h);
+                e.setAttribute('class', c);
+                return e;
+            }
+            
+            function txt(x, y, t, c, a) {
+                const e = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                e.setAttribute('x', x);
+                e.setAttribute('y', y);
+                e.setAttribute('class', c);
+                e.setAttribute('text-anchor', a || 'middle');
+                e.textContent = t;
+                return e;
+            }
+            
+            function arrowPath(x1, y1, cx, cy, x2, y2) {
+                const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                p.setAttribute('d', `M${x1},${y1} Q${cx},${cy} ${x2},${y2}`);
+                p.setAttribute('class', 'arrow');
+                return p;
+            }
+            
+            function drawBalance(B, n) {
+                const svg = els.sb;
+                clear(svg);
+                
+                const W = 1000, H = 360;
+                const P = { l: 90, r: 90, t: 60, b: 80 };
+                const max = Math.max(...B) * 1.15;
+                const bw = (W - P.l - P.r) / (n + 1) * .7;
+                const x = t => P.l + (W - P.l - P.r) * t / n;
+                const y = v => H - P.b - (v / max) * (H - P.t - P.b);
+                
+                for (let t = 0; t <= n; t++) {
+                    const h = (B[t] / max) * (H - P.t - P.b);
+                    const x0 = x(t) - bw / 2;
+                    const y0 = H - P.b - h;
+                    
+                    svg.appendChild(rect(x0, bw, y0, h, 'pos'));
+                    svg.appendChild(txt(x(t), y0 - 18, fmt(B[t]), 'lbl'));
+                    svg.appendChild(txt(x(t), H - P.b + 40, `T${t}`, 'period'));
+                    
+                    if (t > 0) {
+                        const px = x(t - 1);
+                        const py = H - P.b - (B[t - 1] / max) * (H - P.t - P.b);
+                        const cx = (px + x(t)) / 2;
+                        const cy = Math.min(py, y0) - 40;
+                        svg.appendChild(arrowPath(px, py, cx, cy, x(t), y0));
+                    }
+                }
+                
+                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                const m = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                m.setAttribute('id', 'ah');
+                m.setAttribute('markerWidth', '10');
+                m.setAttribute('markerHeight', '7');
+                m.setAttribute('refX', '10');
+                m.setAttribute('refY', '3.5');
+                m.setAttribute('orient', 'auto');
+                
+                const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                p.setAttribute('d', 'M0,0 L10,3.5 L0,7 Z');
+                p.setAttribute('fill', '#60a5fa');
+                m.appendChild(p);
+                defs.appendChild(m);
+                svg.appendChild(defs);
+                
+                svg.appendChild(txt(P.l, P.t + 20, 'Encours = N×(1+r)^t', 'legend', 'start'));
+            }
+            
+            function drawFlows(C, n) {
+                const svg = els.sf;
+                clear(svg);
+                
+                const W = 1000, H = 420;
+                const P = { l: 90, r: 90, t: 35, b: 120 };
+                const M = Math.max(
+                    Math.abs(Math.min(...C.F, 0)),
+                    Math.abs(Math.max(...C.F, 0)),
+                    C.redeem
+                ) * 1.15 || 1;
+                
+                const x = t => P.l + (W - P.l - P.r) * t / n;
+                const y = v => H - P.b - ((v + M) / (2 * M)) * (H - P.t - P.b);
+                
+                svg.appendChild(line(P.l, y(0), W - P.r, y(0), 'axis'));
+                
+                const bw = 32;
+                for (let t = 0; t <= n; t++) {
+                    const X = x(t) - bw / 2;
+                    svg.appendChild(txt(x(t), H - P.b + 37, `T${t}`, 'period'));
+                    
+                    if (t < n) {
+                        if (C.F[t] !== 0) {
+                            const v = C.F[t];
+                            svg.appendChild(rect(X, bw, Math.min(y(0), y(v)), Math.abs(y(v) - y(0)), v >= 0 ? 'pos' : 'neg'));
+                            svg.appendChild(txt(x(t), v >= 0 ? y(0) + 26 : y(v) - 12, (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('fr-FR') + ' €', 'lbl'));
+                        }
+                    } else {
+                        const v = -C.redeem + C.S[n];
+                        const netDecaissement = C.redeem - C.S[n];
+                        svg.appendChild(rect(X, bw, Math.min(y(0), y(v)), Math.abs(y(v) - y(0)), 'neg'));
+                        const lbl = `-${Math.round(netDecaissement).toLocaleString('fr-FR')} € (${Math.round(C.redeem).toLocaleString('fr-FR')} € - bouclier ${Math.round(C.S[n]).toLocaleString('fr-FR')} €)`;
+                        svg.appendChild(txt(x(t), y(v) + 26, lbl, 'lbl'));
+                    }
+                }
+            }
+            
+            function render() {
+                const p = P();
+                const C = comps(p);
+                
+                drawBalance(C.B, p.n);
+                drawFlows(C, p.n);
+                
+                const irrValue = (irr(C.F) * 100).toFixed(2) + ' %';
+                els.irr.textContent = irrValue;
+                els.headerIrr.textContent = irrValue;
+                els.net0.textContent = fmt(C.net0);
+                els.redeem.textContent = fmt(C.redeem);
+            }
+            
+            document.readyState === 'loading' 
+                ? document.addEventListener('DOMContentLoaded', render) 
+                : render();
+        })();
+    </script>
+
+</body></html>
